@@ -1,0 +1,5 @@
+fondos/fondoMenu.jpg
+fondos/pantallaCarga.jpg
+fuentes/OSWALD.otf
+libgdx.png
+tank.png
