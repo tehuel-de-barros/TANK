@@ -1,0 +1,22 @@
+bala.png
+explicacion_tank_java.pdf
+fondos/fondoMenu.jpg
+fondos/pantallaCarga.jpg
+fuentes/OSWALD.otf
+libgdx.png
+maps/32x32GrassAndDirtPath.tsx
+maps/TX Props.tsx
+maps/TX Tileset Wall.tsx
+maps/fence_barbed.tsx
+maps/img/32x32GrassAndDirtPath.png
+maps/img/TX Props.png
+maps/img/fence_barbed.png
+maps/img/rocks.png
+maps/mapa1.tmx
+maps/mapa2.png
+maps/mapa2.tmx
+maps/mapa3.png
+maps/mapa3.tmx
+maps/rocks.tsx
+tank.png
+tank2.png
