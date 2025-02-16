@@ -12,10 +12,10 @@ public class Bala {
     private float speed = 10f;        // Velocidad en unidades/segundo
     private float angle;              // Ángulo de disparo en grados
     private Sprite sprite;            // Sprite de la bala
-    private boolean active = true;    // Indica si la bala está activa
-    private Rectangle bounds;         // Rectángulo para detección de colisiones
+    private boolean active = true;    // Estado activo
+    private Rectangle bounds;         // Rectángulo para colisión
 
-    // Margen para reducir el área de colisión (ajustá este valor para que la bala no colisione "a lo loco")
+    // Margen para reducir el área de colisión
     private float collisionMargin = 0.6f;
 
     public Bala(float x, float y, float angle) {
@@ -25,45 +25,33 @@ public class Bala {
 
         Texture textura = new Texture("bala.png");
         sprite = new Sprite(textura);
-        sprite.setSize(2f, 2f); // Tamaño del sprite en unidades
+        sprite.setSize(2f, 2f);
         sprite.setOriginCenter();
-
-        // Posicionar el sprite de forma que su centro sea (x, y)
-        sprite.setPosition(x - sprite.getWidth() / 2, y - sprite.getHeight() / 2);
+        sprite.setPosition(x - sprite.getWidth()/2, y - sprite.getHeight()/2);
         sprite.setRotation(angle - 90);
 
-        // Crear el rectángulo de colisión centrado en la bala, reduciendo su tamaño con collisionMargin
         float colWidth = sprite.getWidth() - 2 * collisionMargin;
         float colHeight = sprite.getHeight() - 2 * collisionMargin;
         bounds = new Rectangle(
-            x - sprite.getWidth() / 2 + collisionMargin,
-            y - sprite.getHeight() / 2 + collisionMargin,
+            x - sprite.getWidth()/2 + collisionMargin,
+            y - sprite.getHeight()/2 + collisionMargin,
             colWidth,
             colHeight);
     }
 
     public void update(float delta, List<Rectangle> obstacles) {
-        // Actualizar la posición de la bala según el ángulo
         x += Math.cos(Math.toRadians(angle)) * speed * delta;
         y += Math.sin(Math.toRadians(angle)) * speed * delta;
 
-        // Actualizar el sprite para centrarlo en (x, y)
-        sprite.setPosition(x - sprite.getWidth() / 2, y - sprite.getHeight() / 2);
+        sprite.setPosition(x - sprite.getWidth()/2, y - sprite.getHeight()/2);
         sprite.setRotation(angle - 90);
+        bounds.setPosition(x - sprite.getWidth()/2 + collisionMargin, y - sprite.getHeight()/2 + collisionMargin);
 
-        // Actualizar el rectángulo de colisión con el margen aplicado
-        bounds.setPosition(
-            x - sprite.getWidth() / 2 + collisionMargin,
-            y - sprite.getHeight() / 2 + collisionMargin);
-
-        // Verificar si la bala sale de los límites del mundo (convertidos a unidades)
         float worldWidth = Config.ANCHO / 32f;
         float worldHeight = Config.ALTO / 32f;
         if (x < 0 || x > worldWidth || y < 0 || y > worldHeight) {
             active = false;
         }
-
-        // Verificar colisiones con los obstáculos
         for (Rectangle obstacle : obstacles) {
             if (bounds.overlaps(obstacle)) {
                 active = false;
