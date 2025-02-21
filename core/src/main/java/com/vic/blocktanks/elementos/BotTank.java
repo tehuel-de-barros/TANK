@@ -21,6 +21,13 @@ public class BotTank extends Tank {
     private float patrolInterval = 2f;
     private Vector2 patrolDirection;
 
+    // Variables para la animación de desliz
+    private boolean sliding = false;
+    private float slideTimer = 0f;
+    private final float SLIDE_DURATION = 0.5f;
+    private Vector2 slideDirection = new Vector2();
+    private float slideSpeed = 2f;
+
     public BotTank(float ancho, float alto, float x, float y, ModoBot modo) {
         super(ancho, alto, x, y);
         this.modo = modo;
@@ -35,6 +42,41 @@ public class BotTank extends Tank {
         return new Vector2((float)Math.cos(Math.toRadians(ang)), (float)Math.sin(Math.toRadians(ang)));
     }
 
+    // Método auxiliar para verificar colisiones con obstáculos, otros bots y el jugador
+    private boolean isColliding(List<Rectangle> obstacles, List<BotTank> allBots, Tank jugador) {
+        Rectangle myBounds = getBounds();
+        for (Rectangle rect : obstacles) {
+            if(myBounds.overlaps(rect)) return true;
+        }
+        for(BotTank bot : allBots) {
+            if(bot != this && myBounds.overlaps(bot.getBounds())) return true;
+        }
+        if(myBounds.overlaps(jugador.getBounds())) return true;
+        return false;
+    }
+
+    // Método auxiliar para mover en subpasos y detenerse justo antes de colisionar
+    private void moveWithSteps(float dx, float dy,
+                               List<Rectangle> obstacles,
+                               float worldWidth, float worldHeight,
+                               List<BotTank> allBots,
+                               Tank jugador) {
+        int steps = 5;  // Ajusta el número de subpasos si es necesario
+        float stepX = dx / steps;
+        float stepY = dy / steps;
+        for (int i = 0; i < steps; i++) {
+            x += stepX;
+            y += stepY;
+            x = Math.max(0, Math.min(x, worldWidth - ancho));
+            y = Math.max(0, Math.min(y, worldHeight - alto));
+            if(isColliding(obstacles, allBots, jugador)) {
+                x -= stepX;
+                y -= stepY;
+                break;
+            }
+        }
+    }
+
     @Override
     public void disparar() {
         float centroX = x + ancho/2;
@@ -42,19 +84,34 @@ public class BotTank extends Tank {
         float largoCanon = alto * 0.6f;
         float balaX = centroX + (float)Math.cos(Math.toRadians(angle)) * largoCanon;
         float balaY = centroY + (float)Math.sin(Math.toRadians(angle)) * largoCanon;
-        // Usamos el constructor original de Bala (3 parámetros)
         balas.add(new Bala(balaX, balaY, angle));
     }
 
-    /**
-     * Actualiza el bot comprobando colisiones.
-     * En modo AGRESIVO: se mueve hacia el jugador; si el movimiento propuesto genera colisión
-     * con obstáculos, otros bots o el jugador, se aplica un empuje suave hacia atrás (con velocidad de rebote).
-     * En modo ORBITANTE: patrulla aleatoriamente; si hay colisión, se aplica un empuje suave en dirección contraria;
-     * si el jugador se acerca (<5 unidades), cambia a agresivo.
-     */
     public void update(float delta, List<Rectangle> obstacles, float worldWidth, float worldHeight,
                        Vector2 playerPos, List<BotTank> allBots, Tank jugador) {
+        // Si el bot está en estado de desliz, se mueve en subpasos
+        if(sliding) {
+            float dx = slideDirection.x * slideSpeed * delta;
+            float dy = slideDirection.y * slideSpeed * delta;
+            moveWithSteps(dx, dy, obstacles, worldWidth, worldHeight, allBots, jugador);
+            slideTimer -= delta;
+            spr.setPosition(x, y);
+            angle = slideDirection.angleDeg();
+            spr.setRotation(angle - 90);
+            for(Bala b : balas) {
+                b.update(delta, obstacles);
+            }
+            balas.removeIf(b -> !b.isActive());
+            if(slideTimer <= 0) {
+                sliding = false;
+                if(modo == ModoBot.ORBITANTE) {
+                    patrolDirection = getRandomDirection();
+                }
+            }
+            return;
+        }
+
+        // Movimiento normal según el modo
         if(modo == ModoBot.AGRESIVO) {
             float mySpeed = speed * 0.8f;
             Vector2 centro = new Vector2(x + ancho/2, y + alto/2);
@@ -69,32 +126,31 @@ public class BotTank extends Tank {
                 float proposedY = y + moveDir.y * mySpeed * delta;
                 Rectangle proposedBounds = new Rectangle(proposedX, proposedY, ancho, alto);
                 boolean collides = false;
-                // Verificar colisión con obstáculos
                 for (Rectangle rect : obstacles) {
                     if(proposedBounds.overlaps(rect)) {
                         collides = true;
                         break;
                     }
                 }
-                // Verificar colisión con otros bots
                 for(BotTank bot : allBots) {
                     if(bot != this && proposedBounds.overlaps(bot.getBounds())) {
                         collides = true;
                         break;
                     }
                 }
-                // Verificar colisión con el jugador
                 if(proposedBounds.overlaps(jugador.getBounds())) {
                     collides = true;
                 }
                 if(!collides) {
-                    x = proposedX;
-                    y = proposedY;
+                    float dx = proposedX - x;
+                    float dy = proposedY - y;
+                    moveWithSteps(dx, dy, obstacles, worldWidth, worldHeight, allBots, jugador);
                 } else {
-                    // Rebote suave: empuje hacia atrás con velocidad de rebote
-                    float bounceSpeed = 3f; // unidades/segundo
-                    x -= moveDir.x * bounceSpeed * delta;
-                    y -= moveDir.y * bounceSpeed * delta;
+                    // Inicia animación de desliz (giro 180° = retroceso)
+                    sliding = true;
+                    slideTimer = SLIDE_DURATION;
+                    slideDirection = moveDir.cpy();
+                    slideDirection.scl(-1);
                 }
                 angle = moveAngle;
             }
@@ -121,13 +177,14 @@ public class BotTank extends Tank {
             }
             if(proposedBounds.overlaps(jugador.getBounds())) { collides = true; }
             if(!collides) {
-                x = proposedX;
-                y = proposedY;
+                float dx = proposedX - x;
+                float dy = proposedY - y;
+                moveWithSteps(dx, dy, obstacles, worldWidth, worldHeight, allBots, jugador);
             } else {
-                // Rebote suave en modo orbitante: empuje hacia atrás
-                float bounceSpeed = 3f;
-                x -= patrolDirection.x * bounceSpeed * delta;
-                y -= patrolDirection.y * bounceSpeed * delta;
+                sliding = true;
+                slideTimer = SLIDE_DURATION;
+                slideDirection = patrolDirection.cpy();
+                slideDirection.scl(-1);
             }
             angle = patrolDirection.angleDeg();
             Vector2 centro = new Vector2(x + ancho/2, y + alto/2);
@@ -136,7 +193,6 @@ public class BotTank extends Tank {
                 timerDisparo = 0f;
             }
         }
-        // Limitar la posición dentro del mundo
         x = Math.max(0, Math.min(x, worldWidth - ancho));
         y = Math.max(0, Math.min(y, worldHeight - alto));
         spr.setPosition(x, y);

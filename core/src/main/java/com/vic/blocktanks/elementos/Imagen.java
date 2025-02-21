@@ -1,6 +1,7 @@
 package com.vic.blocktanks.elementos;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.vic.blocktanks.utilidades.Globales;
 
@@ -10,6 +11,8 @@ public class Imagen {
 
     public Imagen(String r) {
         t = new Texture(r);
+        // Aplicar filtrado lineal para suavizar la imagen al escalarla
+        t.setFilter(TextureFilter.Linear, TextureFilter.Linear);
         s = new Sprite(t);
     }
 
@@ -25,5 +28,3 @@ public class Imagen {
         s.setSize(ancho, alto);
     }
 }
-
-
