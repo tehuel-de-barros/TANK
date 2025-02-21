@@ -16,6 +16,9 @@ public class Tank {
     public float speed = 3f;   // Velocidad (jugador)
     public float angle = 0;    // Ángulo en grados
 
+    // NUEVO: Vidas del tanque (3 disparos)
+    protected int lives = 3;
+
     protected Texture textura;
     protected Sprite spr;
     protected List<Bala> balas = new ArrayList<>();
@@ -100,5 +103,18 @@ public class Tank {
     public void updateSprite() {
         spr.setPosition(x, y);
         spr.setRotation(angle - 90);
+    }
+
+    // NUEVO: Métodos para manejar las vidas
+    public void reduceLife() {
+        lives--;
+    }
+
+    public int getLives() {
+        return lives;
+    }
+
+    public List<Bala> getBalas() {
+        return balas;
     }
 }

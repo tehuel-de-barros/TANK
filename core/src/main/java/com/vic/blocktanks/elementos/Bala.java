@@ -63,4 +63,12 @@ public class Bala {
     public boolean isActive() {
         return active;
     }
+
+    public Rectangle getBounds() {
+        return bounds;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

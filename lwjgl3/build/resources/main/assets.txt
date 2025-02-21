@@ -1,6 +1,8 @@
 bala.png
 explicacion_tank_java.pdf
 fondos/fondoMenu.jpg
+fondos/gameOver.jpg
+fondos/gameOver.png
 fondos/pantallaCarga.jpg
 fuentes/OSWALD.otf
 libgdx.png

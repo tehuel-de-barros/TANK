@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="23">
- <tileset firstgid="1" source="../32x32GrassAndDirtPath.tsx"/>
- <tileset firstgid="9" source="../../../hola/core/assets/rocks.tsx"/>
- <tileset firstgid="15" source="../fence_barbed.tsx"/>
- <tileset firstgid="30" source="tsx/TX Props.tsx"/>
- <tileset firstgid="286" source="../TX Tileset Wall.tsx"/>
+ <tileset firstgid="1" source="32x32GrassAndDirtPath.tsx"/>
+ <tileset firstgid="9" source="rocks.tsx"/>
+ <tileset firstgid="15" source="fence_barbed.tsx"/>
+ <tileset firstgid="30" source="TX Props.tsx"/>
+ <tileset firstgid="286" source="TX Tileset Wall.tsx"/>
  <layer id="1" name="Capa de patrones 1" width="20" height="15">
   <data encoding="csv">
 47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,
