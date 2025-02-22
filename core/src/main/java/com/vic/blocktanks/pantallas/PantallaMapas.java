@@ -12,19 +12,19 @@ import com.vic.blocktanks.utilidades.Config;
 import com.vic.blocktanks.utilidades.Globales;
 import com.vic.blocktanks.utilidades.Recurso;
 
-public class PantallaMenu implements Screen, MenuScreen {
+public class PantallaMapas implements Screen, MenuScreen {
 
-    Imagen fondo;
-    SpriteBatch b;
-    ShapeRenderer sr;
+    private Imagen fondo;
+    private SpriteBatch batch;
+    private ShapeRenderer sr;
 
-    // Opciones del menú: "Jugar", "1v1", "Salir"
-    Texto opciones[] = new Texto[3];
-    String textos[] = {"Jugar", "1v1", "Salir"};
-    Texto test;
+    // Botones para selección de mapa
+    private Texto opciones[] = new Texto[3];
+    private String textos[] = {"Mapa 1", "Mapa 2", "Mapa 3"};
+    private Texto test;
 
-    int opc = 1;
-    boolean mouseArriba = false;
+    private int opc = 1;
+    private boolean mouseArriba = false;
     public float tiempo = 0;
 
     private Entradas entradas = new Entradas(this);
@@ -33,7 +33,7 @@ public class PantallaMenu implements Screen, MenuScreen {
     public void show() {
         fondo = new Imagen(Recurso.FONDOMENU);
         fondo.setSize(Config.ANCHO, Config.ALTO);
-        b = Globales.batch;
+        batch = Globales.batch;
         sr = new ShapeRenderer();
 
         Gdx.input.setInputProcessor(entradas);
@@ -45,10 +45,8 @@ public class PantallaMenu implements Screen, MenuScreen {
         for (int i = 0; i < opciones.length; i++) {
             opciones[i] = new Texto(Recurso.FUENTEMENU, 75, Color.WHITE, true);
             opciones[i].setTexto(textos[i]);
-            opciones[i].setPosition(
-                (Config.ANCHO/2) - (opciones[i].getAncho()/2),
-                ((Config.ALTO/2) + (opciones[0].getAlto()/2)) - ((opciones[0].getAlto()*i) + (avance*i))
-            );
+            opciones[i].setPosition((Config.ANCHO / 2) - (opciones[i].getAncho() / 2),
+                ((Config.ALTO / 2) + (opciones[0].getAlto() / 2)) - ((opciones[0].getAlto() * i) + (avance * i)));
         }
     }
 
@@ -56,27 +54,23 @@ public class PantallaMenu implements Screen, MenuScreen {
     public void render(float delta) {
         Globales.LimpiarPantalla(0, 0, 0);
 
-        b.begin();
+        batch.begin();
         fondo.dibujar();
         for (int i = 0; i < opciones.length; i++) {
             opciones[i].dibujar();
         }
         test.setTexto("Cord x " + entradas.getMouseX() + " cord y " + entradas.getMouseY());
         test.dibujar();
-        b.end();
+        batch.end();
 
         sr.begin(ShapeRenderer.ShapeType.Line);
         sr.setColor(Color.RED);
         for (int i = 0; i < opciones.length; i++) {
-            sr.rect(opciones[i].getX(),
-                opciones[i].getY() - opciones[i].getAlto(),
-                opciones[i].getAncho(),
-                opciones[i].getAlto());
+            sr.rect(opciones[i].getX(), opciones[i].getY() - opciones[i].getAlto(), opciones[i].getAncho(), opciones[i].getAlto());
         }
         sr.end();
 
         tiempo += delta;
-        // Lógica de navegación por teclado
         if (entradas.isAbajo()) {
             if (tiempo > 0.12f) {
                 tiempo = 0;
@@ -116,18 +110,20 @@ public class PantallaMenu implements Screen, MenuScreen {
         }
 
         if (entradas.isEnter() || entradas.isClick()) {
-            if ((opc == 1) && (mouseArriba || entradas.isEnter())) {
+            if (opc == 1) {
                 Globales.app.setScreen(new PantallaJuego("maps/mapa1.tmx"));
-            } else if ((opc == 2) && (mouseArriba || entradas.isEnter())) {
-                Globales.app.setScreen(new PantallaMapas());
-            } else if ((opc == 3) && (mouseArriba || entradas.isEnter())) {
-                Gdx.app.exit();
+            } else if (opc == 2) {
+                Globales.app.setScreen(new PantallaJuego("maps/mapa2.tmx"));
+            } else if (opc == 3) {
+                Globales.app.setScreen(new PantallaJuego("maps/mapa3.tmx"));
             }
         }
     }
 
     @Override
-    public void resize(int width, int height) { }
+    public void resize(int width, int height) {
+        // Opcionalmente, actualizar viewport
+    }
 
     @Override public void pause() { }
     @Override public void resume() { }
@@ -138,11 +134,7 @@ public class PantallaMenu implements Screen, MenuScreen {
     @Override
     public void cambiarOpcion(int direccion) {
         opc += direccion;
-        if (opc < 1) {
-            opc = 3;
-        }
-        if (opc > 3) {
-            opc = 1;
-        }
+        if (opc < 1) opc = 3;
+        if (opc > 3) opc = 1;
     }
 }

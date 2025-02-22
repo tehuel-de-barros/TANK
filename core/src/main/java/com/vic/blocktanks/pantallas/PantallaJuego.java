@@ -19,7 +19,6 @@ import com.vic.blocktanks.elementos.Bala;
 import com.vic.blocktanks.utilidades.Globales;
 import com.vic.blocktanks.utilidades.Config;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class PantallaJuego implements Screen {
@@ -75,7 +74,7 @@ public class PantallaJuego implements Screen {
         if (obstaclesLayer != null) {
             for (MapObject obj : obstaclesLayer.getObjects()) {
                 if (obj instanceof RectangleMapObject) {
-                    Rectangle rect = ((RectangleMapObject)obj).getRectangle();
+                    Rectangle rect = ((RectangleMapObject) obj).getRectangle();
                     obstacles.add(new Rectangle(rect.x / 32f, rect.y / 32f, rect.width / 32f, rect.height / 32f));
                 }
             }
@@ -83,8 +82,11 @@ public class PantallaJuego implements Screen {
         System.out.println("Obstacles loaded: " + obstacles.size());
 
         bots = new ArrayList<>();
-        if (nivelActual == 0) { // MAPA 1
+
+        // Configurar el jugador según el nivel
+        if (nivelActual == 0) { // MAPA 1: 3 vidas
             jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
+            jugador.setLives(3);
 
             BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
             Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
@@ -100,9 +102,9 @@ public class PantallaJuego implements Screen {
             BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
             botAbajo.angle = 90f;
             bots.add(botAbajo);
-
-        } else if (nivelActual == 1) { // MAPA 2
+        } else if (nivelActual == 1) { // MAPA 2: 2 vidas
             jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
+            jugador.setLives(2);
 
             BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
             Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
@@ -111,7 +113,6 @@ public class PantallaJuego implements Screen {
             botDerecha.angle = diffDer.angleDeg();
             bots.add(botDerecha);
 
-            // Bot superior se posiciona más abajo para no quedar dentro de la pared superior
             BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 4f, ModoBot.ORBITANTE);
             botArriba.angle = 270f;
             bots.add(botArriba);
@@ -120,16 +121,16 @@ public class PantallaJuego implements Screen {
             botAbajo.angle = 90f;
             bots.add(botAbajo);
 
-            // Ajustar los obstáculos (barriles) para que ocupen solo 1 cuadrado, dejando las paredes intactas.
+            // Opcional: ajustar obstáculos para mapa 2
             for (Rectangle r : obstacles) {
                 if (r.y > 1f && (r.y + r.height) < mapWorldHeight - 1f) {
                     r.width = 1f;
                     r.height = 1f;
                 }
             }
-
-        } else if (nivelActual == 2) { // MAPA 3
+        } else if (nivelActual == 2) { // MAPA 3: 1 vida
             jugador = new Tank(1f, 1f, 2f, mapWorldHeight / 2f);
+            jugador.setLives(1);
 
             BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 5f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
             Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
@@ -151,6 +152,7 @@ public class PantallaJuego implements Screen {
     }
 
     private void checkBulletCollisions() {
+        // Balas del jugador vs. bots
         List<Bala> playerBullets = jugador.getBalas();
         for (Bala bala : playerBullets) {
             if (!bala.isActive()) continue;
@@ -166,6 +168,7 @@ public class PantallaJuego implements Screen {
                 }
             }
         }
+        // Balas de cada bot vs. jugador
         for (BotTank bot : bots) {
             List<Bala> botBullets = bot.getBalas();
             for (Bala bala : botBullets) {
