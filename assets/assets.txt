@@ -13,6 +13,7 @@ maps/TX Tileset Wall.tsx
 maps/fence_barbed.tsx
 maps/img/32x32GrassAndDirtPath.png
 maps/img/TX Props.png
+maps/img/TX Tileset Wall.png
 maps/img/fence_barbed.png
 maps/img/rocks.png
 maps/mapa1.tmx
