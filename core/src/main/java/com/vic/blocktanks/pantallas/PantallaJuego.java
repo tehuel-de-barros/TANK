@@ -19,9 +19,11 @@ import com.vic.blocktanks.elementos.Bala;
 import com.vic.blocktanks.utilidades.Globales;
 import com.vic.blocktanks.utilidades.Config;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class PantallaJuego implements Screen {
+
     private String currentMap;
     private TiledMap mapa;
     private OrthogonalTiledMapRenderer renderMapa;
@@ -36,9 +38,18 @@ public class PantallaJuego implements Screen {
     private List<Rectangle> obstacles;
 
     private boolean playerDead = false;
+    // Nivel: 0 = mapa1, 1 = mapa2, 2 = mapa3
+    private int nivelActual = 0;
 
     public PantallaJuego(String mapFile) {
         this.currentMap = mapFile;
+        if (currentMap.equals("maps/mapa1.tmx")) {
+            nivelActual = 0;
+        } else if (currentMap.equals("maps/mapa2.tmx")) {
+            nivelActual = 1;
+        } else if (currentMap.equals("maps/mapa3.tmx")) {
+            nivelActual = 2;
+        }
     }
 
     @Override
@@ -59,47 +70,84 @@ public class PantallaJuego implements Screen {
 
         renderMapa = new OrthogonalTiledMapRenderer(mapa, 1 / 32f);
 
-        // Cargar obstáculos desde la capa "colisiones"
         obstacles = new ArrayList<>();
         MapLayer obstaclesLayer = mapa.getLayers().get("colisiones");
         if (obstaclesLayer != null) {
             for (MapObject obj : obstaclesLayer.getObjects()) {
                 if (obj instanceof RectangleMapObject) {
-                    Rectangle rect = ((RectangleMapObject) obj).getRectangle();
+                    Rectangle rect = ((RectangleMapObject)obj).getRectangle();
                     obstacles.add(new Rectangle(rect.x / 32f, rect.y / 32f, rect.width / 32f, rect.height / 32f));
                 }
             }
         }
         System.out.println("Obstacles loaded: " + obstacles.size());
 
-        // Inicializar jugador
-        // Por defecto se coloca en x = 1f, pero si estamos en mapa3 lo ajustamos para que no esté tan pegado al borde izquierdo
-        jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
-        if (currentMap.equals("maps/mapa3.tmx")) {
-            jugador.x = 2f; // Ajusta este valor para posicionar al jugador más a la derecha
-        }
-
-        // Inicializar bots (ejemplo)
         bots = new ArrayList<>();
-        // Bot en la derecha
-        BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
-        Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
-        Vector2 centroBotDer = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
-        Vector2 diffDer = centroJugador.cpy().sub(centroBotDer);
-        botDerecha.angle = diffDer.angleDeg();
-        bots.add(botDerecha);
+        if (nivelActual == 0) { // MAPA 1
+            jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
 
-        // Bot en la parte superior
-        BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 2f, ModoBot.ORBITANTE);
-        botArriba.x = mapWorldWidth / 2f;
-        botArriba.y = mapWorldHeight - 2.5f;
-        botArriba.angle = 270f;
-        bots.add(botArriba);
+            BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
+            Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
+            Vector2 centroBotDer = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
+            Vector2 diffDer = centroJugador.cpy().sub(centroBotDer);
+            botDerecha.angle = diffDer.angleDeg();
+            bots.add(botDerecha);
 
-        // Bot en la parte inferior
-        BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
-        botAbajo.angle = 90f;
-        bots.add(botAbajo);
+            BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 2.5f, ModoBot.ORBITANTE);
+            botArriba.angle = 270f;
+            bots.add(botArriba);
+
+            BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
+            botAbajo.angle = 90f;
+            bots.add(botAbajo);
+
+        } else if (nivelActual == 1) { // MAPA 2
+            jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
+
+            BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
+            Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
+            Vector2 centroBotDer = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
+            Vector2 diffDer = centroJugador.cpy().sub(centroBotDer);
+            botDerecha.angle = diffDer.angleDeg();
+            bots.add(botDerecha);
+
+            // Bot superior se posiciona más abajo para no quedar dentro de la pared superior
+            BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 4f, ModoBot.ORBITANTE);
+            botArriba.angle = 270f;
+            bots.add(botArriba);
+
+            BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
+            botAbajo.angle = 90f;
+            bots.add(botAbajo);
+
+            // Ajustar los obstáculos (barriles) para que ocupen solo 1 cuadrado, dejando las paredes intactas.
+            for (Rectangle r : obstacles) {
+                if (r.y > 1f && (r.y + r.height) < mapWorldHeight - 1f) {
+                    r.width = 1f;
+                    r.height = 1f;
+                }
+            }
+
+        } else if (nivelActual == 2) { // MAPA 3
+            jugador = new Tank(1f, 1f, 2f, mapWorldHeight / 2f);
+
+            BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 5f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
+            Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
+            Vector2 centroBotDer = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
+            Vector2 diffDer = centroJugador.cpy().sub(centroBotDer);
+            botDerecha.angle = diffDer.angleDeg();
+            bots.add(botDerecha);
+
+            BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 4.5f, ModoBot.ORBITANTE);
+            botArriba.angle = 270f;
+            bots.add(botArriba);
+
+            BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
+            botAbajo.angle = 90f;
+            bots.add(botAbajo);
+        } else {
+            jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
+        }
     }
 
     private void checkBulletCollisions() {
@@ -174,22 +222,24 @@ public class PantallaJuego implements Screen {
             checkBulletCollisions();
         }
 
-        // Avanzar al siguiente nivel cuando se hayan eliminado todos los bots y el jugador sigue vivo.
         if (bots.isEmpty() && !playerDead) {
             String nextMap;
-            if (currentMap.equals("maps/mapa1.tmx")) {
+            if (nivelActual == 0) {
+                nextMap = "maps/mapa2.tmx";
+                nivelActual = 1;
+            } else if (nivelActual == 1) {
                 nextMap = "maps/mapa3.tmx";
-            } else if (currentMap.equals("maps/mapa3.tmx")) {
-                // Si ya pasó mapa3, mostramos la pantalla Win.
+                nivelActual = 2;
+            } else if (nivelActual == 2) {
                 Globales.app.setScreen(new PantallaWin());
                 return;
             } else {
                 nextMap = "maps/mapa1.tmx";
+                nivelActual = 0;
             }
             Globales.app.setScreen(new PantallaJuego(nextMap));
         }
 
-        // Transición a Game Over si el jugador muere
         if (playerDead) {
             Globales.app.setScreen(new PantallaGameOver());
         }
@@ -199,6 +249,7 @@ public class PantallaJuego implements Screen {
     public void resize(int width, int height) {
         viewport.update(width, height);
     }
+
     @Override public void pause() { }
     @Override public void resume() { }
     @Override public void hide() { }
