@@ -4,6 +4,7 @@ fondos/fondoMenu.jpg
 fondos/gameOver.jpg
 fondos/gameOver.png
 fondos/pantallaCarga.jpg
+fondos/win.jpeg
 fuentes/OSWALD.otf
 libgdx.png
 maps/32x32GrassAndDirtPath.tsx

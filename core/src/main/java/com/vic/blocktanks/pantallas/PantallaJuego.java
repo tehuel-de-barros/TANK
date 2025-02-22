@@ -1,5 +1,6 @@
 package com.vic.blocktanks.pantallas;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapLayer;
@@ -16,27 +17,34 @@ import com.vic.blocktanks.elementos.BotTank.ModoBot;
 import com.vic.blocktanks.elementos.Tank;
 import com.vic.blocktanks.elementos.Bala;
 import com.vic.blocktanks.utilidades.Globales;
+import com.vic.blocktanks.utilidades.Config;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PantallaJuego implements Screen {
-    private OrthographicCamera camara;
-    private StretchViewport viewport;
+    private String currentMap;
     private TiledMap mapa;
     private OrthogonalTiledMapRenderer renderMapa;
+    private OrthographicCamera camara;
+    private StretchViewport viewport;
 
     private float mapWorldWidth;
     private float mapWorldHeight;
 
     private Tank jugador;
-    private List<Rectangle> obstacles;
     private List<BotTank> bots;
+    private List<Rectangle> obstacles;
 
-    private boolean playerDead = false;  // Indica si el jugador ha sido eliminado
+    private boolean playerDead = false;
+
+    public PantallaJuego(String mapFile) {
+        this.currentMap = mapFile;
+    }
 
     @Override
     public void show() {
-        mapa = new TmxMapLoader().load("maps/mapa1.tmx");
+        // Cargar el mapa usando currentMap
+        mapa = new TmxMapLoader().load(currentMap);
         int mapTilesX = mapa.getProperties().get("width", Integer.class);
         int mapTilesY = mapa.getProperties().get("height", Integer.class);
         int tileWidth = mapa.getProperties().get("tilewidth", Integer.class);
@@ -51,6 +59,7 @@ public class PantallaJuego implements Screen {
 
         renderMapa = new OrthogonalTiledMapRenderer(mapa, 1 / 32f);
 
+        // Cargar obstáculos desde la capa "colisiones"
         obstacles = new ArrayList<>();
         MapLayer obstaclesLayer = mapa.getLayers().get("colisiones");
         if (obstaclesLayer != null) {
@@ -61,32 +70,39 @@ public class PantallaJuego implements Screen {
                 }
             }
         }
-        System.out.println("Obstacles cargados: " + obstacles.size());
+        System.out.println("Obstacles loaded: " + obstacles.size());
 
+        // Inicializar jugador
+        // Por defecto se coloca en x = 1f, pero si estamos en mapa3 lo ajustamos para que no esté tan pegado al borde izquierdo
         jugador = new Tank(1f, 1f, 1f, mapWorldHeight / 2f);
+        if (currentMap.equals("maps/mapa3.tmx")) {
+            jugador.x = 2f; // Ajusta este valor para posicionar al jugador más a la derecha
+        }
 
+        // Inicializar bots (ejemplo)
         bots = new ArrayList<>();
+        // Bot en la derecha
         BotTank botDerecha = new BotTank(1f, 1f, mapWorldWidth - 2f, mapWorldHeight / 2f, ModoBot.AGRESIVO);
         Vector2 centroJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
-        Vector2 centroBot = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
-        Vector2 diff = centroJugador.cpy().sub(centroBot);
-        botDerecha.angle = diff.angleDeg();
+        Vector2 centroBotDer = new Vector2(botDerecha.x + botDerecha.ancho / 2, botDerecha.y + botDerecha.alto / 2);
+        Vector2 diffDer = centroJugador.cpy().sub(centroBotDer);
+        botDerecha.angle = diffDer.angleDeg();
         bots.add(botDerecha);
 
+        // Bot en la parte superior
         BotTank botArriba = new BotTank(1f, 1f, mapWorldWidth / 2f, mapWorldHeight - 2f, ModoBot.ORBITANTE);
         botArriba.x = mapWorldWidth / 2f;
         botArriba.y = mapWorldHeight - 2.5f;
         botArriba.angle = 270f;
         bots.add(botArriba);
 
+        // Bot en la parte inferior
         BotTank botAbajo = new BotTank(1f, 1f, mapWorldWidth / 2f, 3.5f, ModoBot.ORBITANTE);
         botAbajo.angle = 90f;
         bots.add(botAbajo);
     }
 
-    // Método que verifica colisiones entre balas y tanques y reduce vidas
     private void checkBulletCollisions() {
-        // Balas del jugador vs. bots
         List<Bala> playerBullets = jugador.getBalas();
         for (Bala bala : playerBullets) {
             if (!bala.isActive()) continue;
@@ -102,7 +118,6 @@ public class PantallaJuego implements Screen {
                 }
             }
         }
-        // Balas de cada bot vs. jugador
         for (BotTank bot : bots) {
             List<Bala> botBullets = bot.getBalas();
             for (Bala bala : botBullets) {
@@ -121,15 +136,28 @@ public class PantallaJuego implements Screen {
 
     @Override
     public void render(float delta) {
+        viewport.apply();
         camara.update();
+        Globales.LimpiarPantalla(0, 0, 0);
+
         renderMapa.setView(camara);
+        renderMapa.render();
+
+        Globales.batch.setProjectionMatrix(camara.combined);
+        Globales.batch.begin();
+        if (!playerDead) {
+            jugador.draw();
+        }
+        for (BotTank bot : bots) {
+            bot.draw();
+        }
+        Globales.batch.end();
 
         if (!playerDead) {
             float oldJugadorX = jugador.x;
             float oldJugadorY = jugador.y;
             jugador.update(delta, obstacles, mapWorldWidth, mapWorldHeight);
             Vector2 posJugador = new Vector2(jugador.x + jugador.ancho / 2, jugador.y + jugador.alto / 2);
-
             for (BotTank bot : bots) {
                 float oldBotX = bot.x;
                 float oldBotY = bot.y;
@@ -143,22 +171,25 @@ public class PantallaJuego implements Screen {
                     bot.updateSprite();
                 }
             }
-
             checkBulletCollisions();
         }
 
-        Globales.batch.setProjectionMatrix(camara.combined);
-        renderMapa.render();
-        Globales.batch.begin();
-        if (!playerDead) {
-            jugador.draw();
+        // Avanzar al siguiente nivel cuando se hayan eliminado todos los bots y el jugador sigue vivo.
+        if (bots.isEmpty() && !playerDead) {
+            String nextMap;
+            if (currentMap.equals("maps/mapa1.tmx")) {
+                nextMap = "maps/mapa3.tmx";
+            } else if (currentMap.equals("maps/mapa3.tmx")) {
+                // Si ya pasó mapa3, mostramos la pantalla Win.
+                Globales.app.setScreen(new PantallaWin());
+                return;
+            } else {
+                nextMap = "maps/mapa1.tmx";
+            }
+            Globales.app.setScreen(new PantallaJuego(nextMap));
         }
-        for (BotTank bot : bots) {
-            bot.draw();
-        }
-        Globales.batch.end();
 
-        // Si el jugador está muerto, transicionamos a la pantalla de Game Over
+        // Transición a Game Over si el jugador muere
         if (playerDead) {
             Globales.app.setScreen(new PantallaGameOver());
         }
@@ -168,7 +199,6 @@ public class PantallaJuego implements Screen {
     public void resize(int width, int height) {
         viewport.update(width, height);
     }
-
     @Override public void pause() { }
     @Override public void resume() { }
     @Override public void hide() { }

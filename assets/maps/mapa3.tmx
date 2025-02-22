@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="16">
- <tileset firstgid="1" source="tsx/TX Props.tsx"/>
- <tileset firstgid="257" source="../32x32GrassAndDirtPath.tsx"/>
- <tileset firstgid="265" source="../fence_barbed.tsx"/>
+ <tileset firstgid="1" source="TX Props.tsx"/>
+ <tileset firstgid="257" source="32x32GrassAndDirtPath.tsx"/>
+ <tileset firstgid="265" source="fence_barbed.tsx"/>
  <layer id="2" name="campo" width="20" height="15">
   <data encoding="csv">
 257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,257,

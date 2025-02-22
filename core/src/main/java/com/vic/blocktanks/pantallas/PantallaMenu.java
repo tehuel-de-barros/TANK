@@ -120,10 +120,11 @@ public class PantallaMenu implements Screen {
         }
 
         // Selección de opción con Enter o click
-        if(entradas.isEnter() || entradas.isClick()) {
-            if((opc == 1) && (mouseArriba || entradas.isEnter())) {
-                Globales.app.setScreen(new PantallaJuego());
-            } else if((opc == 3) && (mouseArriba || entradas.isEnter())) {
+        if (entradas.isEnter() || entradas.isClick()) {
+            if ((opc == 1) && (mouseArriba || entradas.isEnter())) {
+                // Inicia el juego con el mapa 1
+                Globales.app.setScreen(new PantallaJuego("maps/mapa1.tmx"));
+            } else if ((opc == 3) && (mouseArriba || entradas.isEnter())) {
                 Gdx.app.exit();
             }
         }
